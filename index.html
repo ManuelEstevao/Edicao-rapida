@@ -1,429 +1,339 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mídia Referência — Editor de Logotipo</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>Mídia Referência — Logotipo Responsivo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     :root {
-      --bg: #0b0c10;
-      --surface: #13151c;
-      --surface2: #1c1f2b;
-      --border: #272b3a;
-      --accent: #e8c84a;
-      --accent2: #c8a830;
-      --text: #e8eaf0;
-      --muted: #6b7280;
-      --danger: #ef4444;
-      --success: #22c55e;
-      --panel-w: 300px;
+      --bg: #0a0c10;
+      --surface: #111318;
+      --surface-elevated: #1a1d2b;
+      --border: #252a3a;
+      --accent: #f5c542;
+      --text: #f0f2f5;
+      --text-muted: #8a8f9f;
+      --danger: #ff5e5e;
+      --shadow: 0 8px 20px rgba(0,0,0,0.4);
     }
 
-    html, body {
-      height: 100%;
+    body {
+      font-family: 'Inter', sans-serif;
       background: var(--bg);
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
+      height: 100vh;
       overflow: hidden;
+      position: fixed;
+      width: 100%;
     }
 
-    /* ── LAYOUT ── */
-    .app { display: flex; flex-direction: column; height: 100vh; }
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
 
-    header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 20px; height: 54px;
-      background: var(--surface);
+    /* Header responsivo */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: 56px;
+      background: rgba(17,19,24,0.95);
+      backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
-      gap: 12px;
+      gap: 8px;
     }
 
     .brand {
-      display: flex; align-items: center; gap: 10px;
-      font-family: 'Bebas Neue', sans-serif;
-      letter-spacing: .06em; font-size: 20px; color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .brand-icon {
+      background: var(--accent);
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    .brand-text {
+      background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      font-size: 0.9rem;
       white-space: nowrap;
     }
-    .brand svg { flex-shrink: 0; }
 
-    .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
 
-    .body { display: flex; flex: 1; overflow: hidden; }
+    /* Main layout responsivo */
+    .main-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      flex-direction: row;
+    }
 
-    /* ── SIDE PANEL ── */
-    .panel {
-      width: var(--panel-w);
+    /* Sidebar: em desktop largura fixa, em mobile vira painel inferior com scroll */
+    .sidebar {
+      width: 280px;
       background: var(--surface);
       border-right: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      overflow-y: auto; flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: all 0.2s;
+      flex-shrink: 0;
     }
 
-    .panel-section {
-      padding: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .panel-section h3 {
-      font-family: 'Bebas Neue', sans-serif;
-      letter-spacing: .08em; font-size: 13px;
-      color: var(--muted); margin-bottom: 12px;
-      text-transform: uppercase;
-    }
-
-    /* ── CANVAS AREA ── */
+    /* Canvas area responsiva com rolagem suave */
     .canvas-area {
-      flex: 1; overflow: auto;
-      background: #07080d;
-      display: flex; align-items: center; justify-content: center;
+      flex: 1;
+      background: #050608;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       position: relative;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
     }
-
     .canvas-wrap {
-      position: relative; display: inline-block;
-      line-height: 0;
-    }
-
-    #mainCanvas {
-      display: block;
-      max-width: 100%; max-height: 100%;
-      cursor: default;
-    }
-
-    /* ── INPUTS ── */
-    .upload-zone {
-      border: 2px dashed var(--border);
-      border-radius: 10px;
-      padding: 24px 16px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color .2s, background .2s;
       position: relative;
+      display: inline-block;
+      box-shadow: var(--shadow);
+      border-radius: 12px;
+      margin: 16px;
     }
-    .upload-zone:hover { border-color: var(--accent); background: rgba(232,200,74,.04); }
-    .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    .upload-zone .uz-icon { font-size: 28px; margin-bottom: 6px; }
-    .upload-zone .uz-label { color: var(--muted); font-size: 12px; line-height: 1.4; }
-    .upload-zone .uz-label strong { color: var(--text); }
+    canvas {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: calc(100vh - 120px);
+      object-fit: contain;
+      cursor: grab;
+      background: #0f1012;
+      border-radius: 8px;
+    }
+    canvas:active { cursor: grabbing; }
 
-    .badge-count {
-      display: inline-block; background: var(--accent); color: #000;
-      font-weight: 700; border-radius: 999px; padding: 1px 8px; font-size: 11px;
-      margin-left: 6px;
-    }
-
-    /* thumbs */
-    .thumb-list {
-      display: flex; flex-direction: column; gap: 6px; max-height: 180px;
-      overflow-y: auto; margin-top: 10px;
-    }
-    .thumb-item {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--surface2); border-radius: 6px; padding: 6px 8px;
-      cursor: pointer; border: 2px solid transparent;
-      transition: border-color .15s;
-    }
-    .thumb-item.active { border-color: var(--accent); }
-    .thumb-item img { width: 36px; height: 36px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
-    .thumb-item .th-name { font-size: 11px; color: var(--muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .thumb-item .th-rm { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 2px; }
-    .thumb-item .th-rm:hover { color: var(--danger); }
-
-    /* sliders */
-    .slider-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .slider-row label { font-size: 12px; color: var(--muted); width: 72px; flex-shrink: 0; }
-    .slider-row input[type=range] {
-      flex: 1; appearance: none; height: 4px;
-      background: var(--border); border-radius: 2px; outline: none;
-    }
-    .slider-row input[type=range]::-webkit-slider-thumb {
-      appearance: none; width: 14px; height: 14px; border-radius: 50%;
-      background: var(--accent); cursor: pointer;
-    }
-    .slider-row .val { font-size: 12px; color: var(--accent); width: 32px; text-align: right; font-variant-numeric: tabular-nums; }
-
-    /* position grid */
-    .pos-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
-      margin-bottom: 10px;
-    }
-    .pos-btn {
-      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
-      border-radius: 6px; padding: 7px 0; cursor: pointer; font-size: 12px;
-      transition: background .15s, color .15s, border-color .15s;
-      text-align: center;
-    }
-    .pos-btn:hover { border-color: var(--accent); color: var(--text); }
-    .pos-btn.active { background: rgba(232,200,74,.15); border-color: var(--accent); color: var(--accent); font-weight: 600; }
-
-    /* fine-tune nudge */
-    .nudge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: 120px; margin: 0 auto; }
-    .nudge-btn {
-      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
-      border-radius: 6px; padding: 6px; cursor: pointer; font-size: 14px;
-      transition: background .15s; text-align: center;
-    }
-    .nudge-btn:hover { background: var(--border); color: var(--text); }
-    .nudge-center { grid-column: 2; grid-row: 2; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--muted); }
-
-    /* opacity row */
-    .opacity-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-
-    /* buttons */
-    .btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 14px; border-radius: 7px; border: none;
-      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
-      cursor: pointer; transition: opacity .15s, transform .1s;
-      white-space: nowrap;
-    }
-    .btn:hover { opacity: .88; }
-    .btn:active { transform: scale(.97); }
-    .btn-accent { background: var(--accent); color: #000; }
-    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .btn-success { background: var(--success); color: #000; }
-    .btn-sm { padding: 6px 10px; font-size: 12px; }
-
-    /* progress */
-    #progressBar {
-      width: 100%; height: 3px; background: var(--border);
-      border-radius: 2px; overflow: hidden; margin-top: 8px; display: none;
-    }
-    #progressFill { height: 100%; background: var(--accent); width: 0; transition: width .2s; }
-
-    /* nav arrows */
-    .nav-arrows { display: flex; align-items: center; gap: 6px; }
-    .nav-btn {
-      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-      border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 14px;
-      transition: background .15s;
-    }
-    .nav-btn:hover { background: var(--border); }
-    #imgCounter { font-size: 12px; color: var(--muted); min-width: 50px; text-align: center; }
-
-    /* empty state */
-    .empty-state {
-      text-align: center; padding: 40px 20px; color: var(--muted);
-    }
-    .empty-state .es-icon { font-size: 48px; margin-bottom: 12px; }
-    .empty-state p { font-size: 13px; line-height: 1.6; }
-
-    /* toast */
-    #toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px);
-      background: var(--success); color: #000; padding: 10px 20px;
-      border-radius: 8px; font-weight: 600; font-size: 13px;
-      transition: transform .3s ease; z-index: 9999; pointer-events: none;
-    }
-    #toast.show { transform: translateX(-50%) translateY(0); }
-
-    /* scrollbar */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-    /* ── RESPONSIVE ── */
+    /* Ajustes para mobile */
     @media (max-width: 700px) {
-      :root { --panel-w: 100%; }
-      .app { overflow: auto; }
-      .body { flex-direction: column; overflow: visible; }
-      html, body { overflow: auto; }
-      .panel { width: 100%; border-right: none; border-bottom: 1px solid var(--border); max-height: none; overflow: visible; }
-      .canvas-area { min-height: 320px; }
-      .thumb-list { max-height: 120px; }
-      .header-actions .btn-outline { display: none; }
+      .main-layout {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        max-height: 38vh;
+        border-right: none;
+        border-top: 1px solid var(--border);
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: 8px;
+        padding: 8px;
+        background: var(--surface);
+      }
+      .panel-section {
+        min-width: 260px;
+        border-bottom: none;
+        border-right: 1px solid var(--border);
+        padding: 12px;
+      }
+      .panel-section:last-child {
+        border-right: none;
+      }
+      .header-actions .btn span {
+        display: inline;
+      }
+      .btn {
+        padding: 6px 12px;
+        font-size: 0.7rem;
+      }
+      .thumb-list {
+        max-height: 100px;
+        flex-direction: row;
+        overflow-x: auto;
+      }
+      .thumb-item {
+        min-width: 80px;
+        flex-direction: column;
+        text-align: center;
+      }
+      .thumb-item img {
+        width: 60px;
+        height: 60px;
+      }
     }
+
+    /* Estilos dos componentes (mantidos) */
+    .panel-section { padding: 16px; border-bottom: 1px solid var(--border); }
+    .panel-section h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px; }
+    .upload-zone { border: 2px dashed var(--border); border-radius: 10px; padding: 12px; text-align: center; cursor: pointer; background: rgba(255,255,255,0.02); margin-bottom: 8px; }
+    .upload-zone:hover { border-color: var(--accent); }
+    .thumb-list { display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; padding-bottom: 4px; }
+    .thumb-item { background: var(--surface-elevated); border-radius: 8px; padding: 6px; cursor: pointer; border: 1px solid transparent; min-width: 70px; text-align: center; }
+    .thumb-item.active { border-color: var(--accent); background: rgba(245,197,66,0.1); }
+    .thumb-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-bottom: 4px; }
+    .thumb-info { font-size: 0.65rem; overflow: hidden; text-overflow: ellipsis; }
+    .remove-photo { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; margin-top: 4px; }
+    .slider-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .slider-row label { width: 60px; font-size: 0.75rem; }
+    input[type="range"] { flex: 1; height: 4px; -webkit-appearance: none; background: var(--border); border-radius: 4px; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--accent); border-radius: 50%; }
+    .val { width: 35px; text-align: right; font-size: 0.7rem; color: var(--accent); }
+    .flex-buttons { display: flex; gap: 8px; margin-bottom: 12px; }
+    .icon-btn { background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 8px; padding: 6px; flex: 1; text-align: center; cursor: pointer; font-size: 0.7rem; }
+    .icon-btn.active { background: var(--accent); color: #0a0c10; }
+    select { background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 8px; padding: 8px; width: 100%; color: var(--text); margin-bottom: 8px; font-size: 0.75rem; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 40px; font-weight: 600; font-size: 0.75rem; border: none; cursor: pointer; background: transparent; }
+    .btn-primary { background: var(--accent); color: #0a0c10; }
+    .btn-secondary { border: 1px solid var(--border); color: var(--text); }
+    .btn-danger { background: rgba(255,94,94,0.15); color: #ff8a8a; border: 1px solid rgba(255,94,94,0.3); }
+    .btn-full { width: 100%; justify-content: center; margin-bottom: 6px; }
+    .key-hint { font-size: 0.6rem; color: var(--text-muted); text-align: center; margin-top: 8px; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e2a1f; color: #b9f5c0; padding: 8px 16px; border-radius: 40px; font-size: 0.75rem; transition: transform 0.2s; z-index: 2000; pointer-events: none; white-space: nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .empty-state { text-align: center; color: var(--text-muted); padding: 20px; }
   </style>
 </head>
 <body>
 <div class="app">
-
-  <!-- HEADER -->
-  <header>
-    <div class="brand">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <rect width="22" height="22" rx="5" fill="#e8c84a"/>
-        <path d="M5 16V6l4 7 4-7v10" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="16.5" cy="7.5" r="1.5" fill="#000"/>
-        <path d="M14.5 10v6" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      Mídia Referência — Editor de Logotipo
-    </div>
+  <div class="header">
+    <div class="brand"><div class="brand-icon">M</div><div class="brand-text">Mídia Referência</div></div>
     <div class="header-actions">
-      <div class="nav-arrows">
-        <button class="nav-btn" id="prevBtn" title="Foto anterior">◀</button>
-        <span id="imgCounter">— / —</span>
-        <button class="nav-btn" id="nextBtn" title="Próxima foto">▶</button>
-      </div>
-      <button class="btn btn-outline btn-sm" id="clearBtn">🗑 Limpar</button>
-      <button class="btn btn-accent btn-sm" id="downloadAllBtn">⬇ Baixar Todas</button>
+      <button class="btn btn-secondary" id="prevBtn">◀</button>
+      <span id="imgCounter">—</span>
+      <button class="btn btn-secondary" id="nextBtn">▶</button>
+      <button class="btn btn-secondary" id="clearBtn">🗑</button>
+      <button class="btn btn-primary" id="downloadCurrentBtn">⬇ Esta</button>
+      <button class="btn btn-primary" id="downloadAllBtn">📁 Todas</button>
     </div>
-  </header>
-
-  <div class="body">
-
-    <!-- SIDE PANEL -->
-    <aside class="panel">
-
-      <!-- FOTOS -->
+  </div>
+  <div class="main-layout">
+    <aside class="sidebar" id="sidebar">
+      <!-- Fotos -->
       <div class="panel-section">
-        <h3>📷 Fotos <span class="badge-count" id="photosCount">0</span></h3>
+        <h3>📸 FOTOS</h3>
         <div class="upload-zone" id="photosZone">
-          <input type="file" id="photosInput" accept="image/*" multiple />
-          <div class="uz-icon">🖼</div>
-          <div class="uz-label"><strong>Clique ou arraste</strong><br>Múltiplas fotos suportadas</div>
+          <input type="file" id="photosInput" accept="image/*" multiple style="display:none">
+          <div>➕ Adicionar fotos</div>
         </div>
-        <div class="thumb-list" id="thumbList"></div>
+        <div id="thumbList" class="thumb-list"></div>
       </div>
-
-      <!-- LOGOTIPO -->
+      <!-- Logotipo -->
       <div class="panel-section">
-        <h3>🔖 Logotipo</h3>
-        <div class="upload-zone" id="logoZone" style="padding:16px 12px;">
-          <input type="file" id="logoInput" accept="image/*" />
-          <div id="logoPreviewWrap">
-            <div class="uz-icon">⬆</div>
-            <div class="uz-label"><strong>Carregar logotipo</strong><br>PNG com transparência recomendado</div>
-          </div>
+        <h3>🏷️ LOGOTIPO</h3>
+        <div class="upload-zone" id="logoZone">
+          <input type="file" id="logoInput" accept="image/*" style="display:none">
+          <div id="logoPreviewWrap">⬆️ Carregar logo</div>
         </div>
+        <button id="removeLogoBtn" class="btn btn-danger btn-full">🗑 Remover</button>
       </div>
-
-      <!-- TAMANHO & OPACIDADE -->
+      <!-- Escala e opacidade -->
       <div class="panel-section">
-        <h3>⚙ Ajustes</h3>
-
-        <div class="slider-row">
-          <label>Tamanho</label>
-          <input type="range" id="sizeSlider" min="5" max="100" value="25" />
-          <span class="val" id="sizeVal">25%</span>
-        </div>
-
-        <div class="slider-row">
-          <label>Opacidade</label>
-          <input type="range" id="opacitySlider" min="10" max="100" value="90" />
-          <span class="val" id="opacityVal">90%</span>
-        </div>
+        <h3>⚙️ AJUSTES</h3>
+        <div class="slider-row"><label>Tamanho</label><input type="range" id="sizeSlider" min="5" max="80" value="22"><span id="sizeVal" class="val">22%</span></div>
+        <div class="slider-row"><label>Opacidade</label><input type="range" id="opacitySlider" min="20" max="100" value="92"><span id="opacityVal" class="val">92%</span></div>
       </div>
-
-      <!-- POSIÇÃO RÁPIDA -->
+      <!-- Transformações -->
       <div class="panel-section">
-        <h3>📍 Posição Rápida</h3>
-        <div class="pos-grid" id="posGrid">
-          <button class="pos-btn" data-pos="tl">↖ Sup.Esq</button>
-          <button class="pos-btn" data-pos="tc">↑ Sup.Ctr</button>
-          <button class="pos-btn" data-pos="tr">↗ Sup.Dir</button>
-          <button class="pos-btn" data-pos="ml">← Meio.Esq</button>
-          <button class="pos-btn" data-pos="mc">⊙ Centro</button>
-          <button class="pos-btn" data-pos="mr">→ Meio.Dir</button>
-          <button class="pos-btn" data-pos="bl">↙ Inf.Esq</button>
-          <button class="pos-btn active" data-pos="br">↘ Inf.Dir</button>
-          <button class="pos-btn" data-pos="bc">↓ Inf.Ctr</button>
-        </div>
-
-        <!-- AJUSTE FINO -->
-        <h3 style="margin-top:4px">🎯 Ajuste Fino (px)</h3>
-        <div class="nudge-grid">
-          <div></div>
-          <button class="nudge-btn" id="nudgeU">▲</button>
-          <div></div>
-          <button class="nudge-btn" id="nudgeL">◀</button>
-          <span class="nudge-center">pos</span>
-          <button class="nudge-btn" id="nudgeR">▶</button>
-          <div></div>
-          <button class="nudge-btn" id="nudgeD">▼</button>
-          <div></div>
-        </div>
-        <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">Arraste o logotipo na prévia também</p>
+        <h3>🔄 TRANSFORMAÇÕES</h3>
+        <div class="slider-row"><label>Rotação</label><input type="range" id="rotationSlider" min="-180" max="180" value="0"><span id="rotationVal" class="val">0°</span></div>
+        <div class="flex-buttons"><button id="flipHBtn" class="icon-btn">Espelhar H</button><button id="flipVBtn" class="icon-btn">Espelhar V</button></div>
+        <button id="resetTransformBtn" class="btn btn-secondary btn-full">Reset transformações</button>
       </div>
-
-      <!-- SALVAR -->
+      <!-- Blend e sombra -->
       <div class="panel-section">
-        <h3>💾 Exportar</h3>
-        <button class="btn btn-success btn-sm" id="downloadCurrentBtn" style="width:100%;justify-content:center;margin-bottom:8px;">
-          ⬇ Baixar foto atual
-        </button>
-        <button class="btn btn-accent btn-sm" id="downloadAllBtn2" style="width:100%;justify-content:center;">
-          ⬇ Baixar TODAS as fotos
-        </button>
-        <div id="progressBar"><div id="progressFill"></div></div>
-        <p id="progressLabel" style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px;display:none;"></p>
+        <h3>🎨 BLEND & SOMBRA</h3>
+        <select id="blendModeSelect"><option value="normal">Normal</option><option value="multiply">Multiplicar</option><option value="screen">Tela</option><option value="overlay">Sobrepor</option></select>
+        <div class="slider-row"><label>Sombra</label><input type="range" id="shadowSlider" min="0" max="20" value="0" step="0.5"><span id="shadowVal" class="val">0px</span></div>
       </div>
-
+      <!-- Posição livre -->
+      <div class="panel-section">
+        <h3>📍 POSIÇÃO</h3>
+        <div class="flex-buttons"><button id="centerLogoBtn" class="icon-btn">Centralizar</button><button id="resetPosBtn" class="icon-btn">Canto inferior dir.</button></div>
+        <div class="key-hint">⬅️ ➡️ ⬆️ ⬇️ mover | Shift + seta rápido</div>
+        <div class="key-hint">👆 Arraste direto na imagem</div>
+      </div>
     </aside>
 
-    <!-- CANVAS AREA -->
-    <main class="canvas-area" id="canvasArea">
-      <div class="canvas-wrap" id="canvasWrap">
+    <div class="canvas-area" id="canvasArea">
+      <div class="canvas-wrap">
         <canvas id="mainCanvas"></canvas>
       </div>
-      <div class="empty-state" id="emptyState">
-        <div class="es-icon">📂</div>
-        <p>Carregue fotos e um logotipo<br>para começar a editar.</p>
-      </div>
-    </main>
-
-  </div><!-- .body -->
-</div><!-- .app -->
-
-<div id="toast">✅ Salvo com sucesso!</div>
+      <div class="empty-state" id="emptyState">📂 Adicione fotos e um logotipo</div>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast">✅ OK</div>
 
 <script>
-  // ── STATE ──────────────────────────────────────────────
-  let photos = [];      // {file, url, img, name}
+  // Estado responsivo (configurações globais)
+  let photos = [];
   let currentIdx = 0;
   let logoImg = null;
   let logoUrl = null;
 
-  // logo position relative to canvas (normalised 0..1)
-  let logoNX = 0.97, logoNY = 0.97; // default: bottom-right
-  let logoSize = 25;    // % of canvas width
-  let logoOpacity = 0.9;
+  let globalLogoSize = 22;
+  let globalOpacity = 0.92;
+  let globalRotation = 0;
+  let globalFlipX = false;
+  let globalFlipY = false;
+  let globalShadowBlur = 0;
+  let globalBlendMode = 'normal';
+  let globalPosX = 0.97;
+  let globalPosY = 0.97;
 
-  // drag state
-  let dragging = false, dragOX = 0, dragOY = 0;
+  let dragging = false, dragStartX = 0, dragStartY = 0, dragBaseX = 0, dragBaseY = 0;
 
   const canvas = document.getElementById('mainCanvas');
   const ctx = canvas.getContext('2d');
 
-  // ── HELPERS ─────────────────────────────────────────────
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2200);
+  // Ajudantes
+  function showToast(msg, err = false) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.background = err ? '#3c1e1e' : '#1e2a1f';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
   }
 
   function loadImage(url) {
-    return new Promise(res => {
+    return new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => res(img);
+      img.onload = () => resolve(img);
+      img.onerror = reject;
       img.src = url;
     });
   }
 
-  // ── DRAW ─────────────────────────────────────────────────
-  function draw(photoImg) {
-    if (!photoImg) return;
-    canvas.width  = photoImg.naturalWidth;
-    canvas.height = photoImg.naturalHeight;
-    ctx.drawImage(photoImg, 0, 0);
-
-    if (!logoImg) return;
-    const lw = canvas.width * (logoSize / 100);
-    const lh = (logoImg.naturalHeight / logoImg.naturalWidth) * lw;
-    const lx = logoNX * canvas.width  - lw / 2;
-    const ly = logoNY * canvas.height - lh / 2;
-
-    ctx.globalAlpha = logoOpacity;
-    ctx.drawImage(logoImg, lx, ly, lw, lh);
-    ctx.globalAlpha = 1;
+  function getLogoDimensions(canvasW) {
+    const lw = canvasW * (globalLogoSize / 100);
+    const lh = logoImg ? (logoImg.naturalHeight / logoImg.naturalWidth) * lw : 0;
+    return { lw, lh };
   }
 
+  // Desenho responsivo: canvas com tamanho nativo da foto, mas CSS limita exibição
   function drawCurrent() {
     if (!photos.length) {
       canvas.width = 10; canvas.height = 10;
@@ -431,281 +341,283 @@
       return;
     }
     document.getElementById('emptyState').style.display = 'none';
-    draw(photos[currentIdx].img);
+    const photo = photos[currentIdx];
+    if (!photo.img) return;
+
+    canvas.width = photo.img.naturalWidth;
+    canvas.height = photo.img.naturalHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(photo.img, 0, 0);
+
+    if (!logoImg) return;
+
+    const { lw, lh } = getLogoDimensions(canvas.width);
+    const lx = globalPosX * canvas.width;
+    const ly = globalPosY * canvas.height;
+
+    ctx.save();
+    ctx.globalAlpha = globalOpacity;
+    ctx.globalCompositeOperation = globalBlendMode;
+    if (globalShadowBlur > 0) {
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = globalShadowBlur;
+      ctx.shadowOffsetX = globalShadowBlur * 0.3;
+      ctx.shadowOffsetY = globalShadowBlur * 0.3;
+    }
+    ctx.translate(lx, ly);
+    ctx.rotate(globalRotation * Math.PI / 180);
+    ctx.scale(globalFlipX ? -1 : 1, globalFlipY ? -1 : 1);
+    ctx.drawImage(logoImg, -lw/2, -lh/2, lw, lh);
+    ctx.restore();
   }
 
-  // ── PHOTOS ───────────────────────────────────────────────
-  document.getElementById('photosInput').addEventListener('change', async e => {
-    const files = Array.from(e.target.files);
-    for (const f of files) {
-      const url = URL.createObjectURL(f);
-      const img = await loadImage(url);
-      photos.push({ file: f, url, img, name: f.name });
-    }
-    currentIdx = photos.length - 1;
-    updateThumbs(); updateCounter(); drawCurrent();
-    e.target.value = '';
-  });
-
-  // drag & drop on photos zone
-  const pZone = document.getElementById('photosZone');
-  pZone.addEventListener('dragover', e => { e.preventDefault(); pZone.style.borderColor = 'var(--accent)'; });
-  pZone.addEventListener('dragleave', () => { pZone.style.borderColor = ''; });
-  pZone.addEventListener('drop', async e => {
-    e.preventDefault(); pZone.style.borderColor = '';
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-    for (const f of files) {
-      const url = URL.createObjectURL(f);
-      const img = await loadImage(url);
-      photos.push({ file: f, url, img, name: f.name });
-    }
-    currentIdx = photos.length - 1;
-    updateThumbs(); updateCounter(); drawCurrent();
-  });
-
-  function updateThumbs() {
+  // UI Thumbs responsiva (scroll horizontal em mobile)
+  function updateThumbsAndCounter() {
     const list = document.getElementById('thumbList');
     list.innerHTML = '';
-    document.getElementById('photosCount').textContent = photos.length;
+    document.getElementById('photosCount')?.remove(); // não usado
     photos.forEach((p, i) => {
-      const item = document.createElement('div');
-      item.className = 'thumb-item' + (i === currentIdx ? ' active' : '');
-      item.innerHTML = `<img src="${p.url}" /><span class="th-name">${p.name}</span>
-        <button class="th-rm" data-i="${i}" title="Remover">✕</button>`;
-      item.addEventListener('click', ev => {
-        if (ev.target.classList.contains('th-rm')) return;
-        currentIdx = i; updateThumbs(); drawCurrent(); updateCounter();
+      const div = document.createElement('div');
+      div.className = `thumb-item ${i === currentIdx ? 'active' : ''}`;
+      div.innerHTML = `<img src="${p.url}" /><div class="thumb-info">${p.name.substring(0,12)}</div><button class="remove-photo" data-i="${i}">✕</button>`;
+      div.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-photo')) return;
+        currentIdx = i;
+        updateThumbsAndCounter();
+        drawCurrent();
       });
-      item.querySelector('.th-rm').addEventListener('click', () => removePhoto(i));
-      list.appendChild(item);
+      div.querySelector('.remove-photo').addEventListener('click', (e) => {
+        e.stopPropagation();
+        removePhoto(i);
+      });
+      list.appendChild(div);
     });
+    document.getElementById('imgCounter').innerText = photos.length ? `${currentIdx+1}/${photos.length}` : '0';
   }
 
   function removePhoto(i) {
     URL.revokeObjectURL(photos[i].url);
     photos.splice(i, 1);
-    if (currentIdx >= photos.length) currentIdx = photos.length - 1;
-    updateThumbs(); updateCounter(); drawCurrent();
-  }
-
-  function updateCounter() {
-    document.getElementById('imgCounter').textContent = photos.length
-      ? `${currentIdx + 1} / ${photos.length}` : '— / —';
-  }
-
-  document.getElementById('prevBtn').addEventListener('click', () => {
-    if (!photos.length) return;
-    currentIdx = (currentIdx - 1 + photos.length) % photos.length;
-    updateThumbs(); drawCurrent(); updateCounter();
-  });
-  document.getElementById('nextBtn').addEventListener('click', () => {
-    if (!photos.length) return;
-    currentIdx = (currentIdx + 1) % photos.length;
-    updateThumbs(); drawCurrent(); updateCounter();
-  });
-
-  document.getElementById('clearBtn').addEventListener('click', () => {
-    if (!confirm('Remover todas as fotos?')) return;
-    photos.forEach(p => URL.revokeObjectURL(p.url));
-    photos = []; currentIdx = 0;
-    updateThumbs(); updateCounter(); drawCurrent();
-  });
-
-  // ── LOGO ─────────────────────────────────────────────────
-  document.getElementById('logoInput').addEventListener('change', async e => {
-    const f = e.target.files[0]; if (!f) return;
-    if (logoUrl) URL.revokeObjectURL(logoUrl);
-    logoUrl = URL.createObjectURL(f);
-    logoImg = await loadImage(logoUrl);
-    // show preview
-    const wrap = document.getElementById('logoPreviewWrap');
-    wrap.innerHTML = `<img src="${logoUrl}" style="max-height:60px;max-width:100%;border-radius:4px;margin-bottom:4px;" /><div class="uz-label" style="font-size:11px;">Clique para trocar</div>`;
+    if (photos.length === 0) currentIdx = 0;
+    else if (currentIdx >= photos.length) currentIdx = photos.length - 1;
     drawCurrent();
-    e.target.value = '';
-  });
-
-  // drag & drop on logo zone
-  const lZone = document.getElementById('logoZone');
-  lZone.addEventListener('dragover', e => { e.preventDefault(); lZone.style.borderColor = 'var(--accent)'; });
-  lZone.addEventListener('dragleave', () => { lZone.style.borderColor = ''; });
-  lZone.addEventListener('drop', async e => {
-    e.preventDefault(); lZone.style.borderColor = '';
-    const f = Array.from(e.dataTransfer.files).find(x => x.type.startsWith('image/'));
-    if (!f) return;
-    if (logoUrl) URL.revokeObjectURL(logoUrl);
-    logoUrl = URL.createObjectURL(f);
-    logoImg = await loadImage(logoUrl);
-    const wrap = document.getElementById('logoPreviewWrap');
-    wrap.innerHTML = `<img src="${logoUrl}" style="max-height:60px;max-width:100%;border-radius:4px;margin-bottom:4px;" />`;
-    drawCurrent();
-  });
-
-  // ── SLIDERS ──────────────────────────────────────────────
-  document.getElementById('sizeSlider').addEventListener('input', function() {
-    logoSize = +this.value;
-    document.getElementById('sizeVal').textContent = logoSize + '%';
-    drawCurrent();
-  });
-
-  document.getElementById('opacitySlider').addEventListener('input', function() {
-    logoOpacity = +this.value / 100;
-    document.getElementById('opacityVal').textContent = this.value + '%';
-    drawCurrent();
-  });
-
-  // ── POSITION GRID ────────────────────────────────────────
-  const PAD = 0.03;
-  const POS_MAP = {
-    tl: [PAD, PAD],     tc: [.5, PAD],      tr: [1-PAD, PAD],
-    ml: [PAD, .5],      mc: [.5, .5],       mr: [1-PAD, .5],
-    bl: [PAD, 1-PAD],   bc: [.5, 1-PAD],    br: [1-PAD, 1-PAD],
-  };
-
-  document.getElementById('posGrid').addEventListener('click', e => {
-    const btn = e.target.closest('[data-pos]');
-    if (!btn) return;
-    document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    [logoNX, logoNY] = POS_MAP[btn.dataset.pos];
-    drawCurrent();
-  });
-
-  // ── NUDGE ────────────────────────────────────────────────
-  const NUDGE = 0.005;
-  document.getElementById('nudgeU').addEventListener('click', () => { logoNY -= NUDGE; clampLogo(); drawCurrent(); });
-  document.getElementById('nudgeD').addEventListener('click', () => { logoNY += NUDGE; clampLogo(); drawCurrent(); });
-  document.getElementById('nudgeL').addEventListener('click', () => { logoNX -= NUDGE; clampLogo(); drawCurrent(); });
-  document.getElementById('nudgeR').addEventListener('click', () => { logoNX += NUDGE; clampLogo(); drawCurrent(); });
-
-  function clampLogo() {
-    logoNX = Math.max(0, Math.min(1, logoNX));
-    logoNY = Math.max(0, Math.min(1, logoNY));
+    updateThumbsAndCounter();
   }
 
-  // ── DRAG LOGO ON CANVAS ──────────────────────────────────
-  canvas.addEventListener('mousedown', startDrag);
-  canvas.addEventListener('touchstart', startDragTouch, { passive: false });
-
-  function canvasPos(e) {
-    const r = canvas.getBoundingClientRect();
-    const sx = canvas.width  / r.width;
-    const sy = canvas.height / r.height;
-    return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
-  }
-  function canvasPosTouch(e) {
-    const t = e.touches[0];
-    return canvasPos({ clientX: t.clientX, clientY: t.clientY });
-  }
-
-  function hitLogo(nx, ny) {
-    if (!logoImg) return false;
-    const lw = canvas.width * (logoSize / 100);
-    const lh = (logoImg.naturalHeight / logoImg.naturalWidth) * lw;
-    const lx = logoNX * canvas.width;
-    const ly = logoNY * canvas.height;
-    const px = nx * canvas.width, py = ny * canvas.height;
-    return px >= lx - lw/2 && px <= lx + lw/2 && py >= ly - lh/2 && py <= ly + lh/2;
+  function syncUI() {
+    document.getElementById('sizeSlider').value = globalLogoSize;
+    document.getElementById('sizeVal').innerText = globalLogoSize + '%';
+    document.getElementById('opacitySlider').value = globalOpacity * 100;
+    document.getElementById('opacityVal').innerText = Math.round(globalOpacity * 100) + '%';
+    document.getElementById('rotationSlider').value = globalRotation;
+    document.getElementById('rotationVal').innerText = globalRotation + '°';
+    document.getElementById('flipHBtn').classList.toggle('active', globalFlipX);
+    document.getElementById('flipVBtn').classList.toggle('active', globalFlipY);
+    document.getElementById('shadowSlider').value = globalShadowBlur;
+    document.getElementById('shadowVal').innerText = globalShadowBlur + 'px';
+    document.getElementById('blendModeSelect').value = globalBlendMode;
   }
 
-  function startDrag(e) {
-    const p = canvasPos(e);
-    const nx = p.x / canvas.width, ny = p.y / canvas.height;
-    if (hitLogo(nx, ny)) {
-      dragging = true;
-      dragOX = nx - logoNX; dragOY = ny - logoNY;
-      canvas.style.cursor = 'grabbing';
+  function updateGlobal(updates) {
+    if ('globalLogoSize' in updates) globalLogoSize = updates.globalLogoSize;
+    if ('globalOpacity' in updates) globalOpacity = updates.globalOpacity;
+    if ('globalRotation' in updates) globalRotation = updates.globalRotation;
+    if ('globalFlipX' in updates) globalFlipX = updates.globalFlipX;
+    if ('globalFlipY' in updates) globalFlipY = updates.globalFlipY;
+    if ('globalShadowBlur' in updates) globalShadowBlur = updates.globalShadowBlur;
+    if ('globalBlendMode' in updates) globalBlendMode = updates.globalBlendMode;
+    if ('globalPosX' in updates) globalPosX = updates.globalPosX;
+    if ('globalPosY' in updates) globalPosY = updates.globalPosY;
+    drawCurrent();
+    syncUI();
+  }
+
+  async function addPhotos(files) {
+    for (const f of files) {
+      if (!f.type.startsWith('image/')) continue;
+      const url = URL.createObjectURL(f);
+      try {
+        const img = await loadImage(url);
+        photos.push({ file: f, url, img, name: f.name, mime: f.type });
+        currentIdx = photos.length - 1;
+      } catch(e) {}
     }
-  }
-  function startDragTouch(e) {
-    const p = canvasPosTouch(e);
-    const nx = p.x / canvas.width, ny = p.y / canvas.height;
-    if (hitLogo(nx, ny)) { e.preventDefault(); dragging = true; dragOX = nx - logoNX; dragOY = ny - logoNY; }
+    updateThumbsAndCounter();
+    drawCurrent();
   }
 
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const p = canvasPos(e);
-    logoNX = p.x / canvas.width  - dragOX;
-    logoNY = p.y / canvas.height - dragOY;
-    clampLogo(); drawCurrent();
-  });
-  document.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    e.preventDefault();
-    const p = canvasPosTouch(e);
-    logoNX = p.x / canvas.width  - dragOX;
-    logoNY = p.y / canvas.height - dragOY;
-    clampLogo(); drawCurrent();
-  }, { passive: false });
-  document.addEventListener('mouseup',  () => { dragging = false; canvas.style.cursor = 'default'; });
-  document.addEventListener('touchend', () => { dragging = false; });
+  async function setLogo(file) {
+    if (logoUrl) URL.revokeObjectURL(logoUrl);
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await loadImage(url);
+      logoImg = img;
+      logoUrl = url;
+      document.getElementById('logoPreviewWrap').innerHTML = `<img src="${url}" style="max-height:50px; border-radius:6px;" />`;
+      drawCurrent();
+      showToast('Logotipo carregado');
+    } catch(e) { showToast('Erro', true); }
+  }
 
-  canvas.addEventListener('mousemove', e => {
-    const p = canvasPos(e);
-    canvas.style.cursor = hitLogo(p.x/canvas.width, p.y/canvas.height) ? 'grab' : 'default';
-  });
+  function removeLogo() {
+    if (logoUrl) URL.revokeObjectURL(logoUrl);
+    logoImg = null;
+    logoUrl = null;
+    document.getElementById('logoPreviewWrap').innerHTML = '⬆️ Carregar logo';
+    drawCurrent();
+  }
 
-  // ── DOWNLOAD ─────────────────────────────────────────────
-  function exportPhoto(photoObj) {
-    const offCanvas = document.createElement('canvas');
-    const offCtx = offCanvas.getContext('2d');
-    offCanvas.width  = photoObj.img.naturalWidth;
-    offCanvas.height = photoObj.img.naturalHeight;
-    offCtx.drawImage(photoObj.img, 0, 0);
-    if (logoImg) {
-      const lw = offCanvas.width * (logoSize / 100);
-      const lh = (logoImg.naturalHeight / logoImg.naturalWidth) * lw;
-      const lx = logoNX * offCanvas.width  - lw / 2;
-      const ly = logoNY * offCanvas.height - lh / 2;
-      offCtx.globalAlpha = logoOpacity;
-      offCtx.drawImage(logoImg, lx, ly, lw, lh);
-      offCtx.globalAlpha = 1;
-    }
-    return new Promise(res => {
+  async function exportPhoto(photo, idx) {
+    return new Promise(resolve => {
+      const offCanvas = document.createElement('canvas');
+      const offCtx = offCanvas.getContext('2d');
+      offCanvas.width = photo.img.naturalWidth;
+      offCanvas.height = photo.img.naturalHeight;
+      offCtx.drawImage(photo.img, 0, 0);
+      if (logoImg) {
+        const { lw, lh } = getLogoDimensions(offCanvas.width);
+        const lx = globalPosX * offCanvas.width;
+        const ly = globalPosY * offCanvas.height;
+        offCtx.save();
+        offCtx.globalAlpha = globalOpacity;
+        offCtx.globalCompositeOperation = globalBlendMode;
+        if (globalShadowBlur > 0) {
+          offCtx.shadowColor = 'rgba(0,0,0,0.5)';
+          offCtx.shadowBlur = globalShadowBlur;
+          offCtx.shadowOffsetX = globalShadowBlur * 0.3;
+          offCtx.shadowOffsetY = globalShadowBlur * 0.3;
+        }
+        offCtx.translate(lx, ly);
+        offCtx.rotate(globalRotation * Math.PI / 180);
+        offCtx.scale(globalFlipX ? -1 : 1, globalFlipY ? -1 : 1);
+        offCtx.drawImage(logoImg, -lw/2, -lh/2, lw, lh);
+        offCtx.restore();
+      }
+      const isJpeg = photo.name.match(/\.jpe?g$/i) || photo.mime === 'image/jpeg';
+      const mime = isJpeg ? 'image/jpeg' : 'image/png';
       offCanvas.toBlob(blob => {
-        const ext = photoObj.name.split('.').pop().toLowerCase();
-        const mime = (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg' : 'image/png';
         const a = document.createElement('a');
+        a.download = `midia_${photo.name.replace(/\.[^/.]+$/, '')}.${isJpeg ? 'jpg' : 'png'}`;
         a.href = URL.createObjectURL(blob);
-        a.download = 'logo_' + photoObj.name;
         a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 3000);
-        res();
-      }, 'image/png');
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        resolve();
+      }, mime, isJpeg ? 0.92 : undefined);
     });
   }
 
-  document.getElementById('downloadCurrentBtn').addEventListener('click', async () => {
-    if (!photos.length) { showToast('⚠ Nenhuma foto carregada'); return; }
-    await exportPhoto(photos[currentIdx]);
-    showToast('✅ Foto baixada!');
-  });
-
   async function downloadAll() {
-    if (!photos.length) { showToast('⚠ Nenhuma foto carregada'); return; }
-    const bar = document.getElementById('progressBar');
-    const fill = document.getElementById('progressFill');
-    const label = document.getElementById('progressLabel');
-    bar.style.display = 'block'; label.style.display = 'block';
+    if (!photos.length) return showToast('Nenhuma foto', true);
+    showToast(`Exportando ${photos.length}...`);
     for (let i = 0; i < photos.length; i++) {
-      label.textContent = `Exportando ${i+1} de ${photos.length}…`;
-      fill.style.width = ((i / photos.length) * 100) + '%';
-      await exportPhoto(photos[i]);
-      await new Promise(r => setTimeout(r, 200));
+      await exportPhoto(photos[i], i);
+      await new Promise(r => setTimeout(r, 100));
     }
-    fill.style.width = '100%';
-    label.textContent = `✅ ${photos.length} fotos exportadas!`;
-    setTimeout(() => { bar.style.display = 'none'; label.style.display = 'none'; fill.style.width = '0'; }, 3000);
-    showToast(`✅ ${photos.length} fotos baixadas!`);
+    showToast('Concluído!');
   }
 
-  document.getElementById('downloadAllBtn').addEventListener('click', downloadAll);
-  document.getElementById('downloadAllBtn2').addEventListener('click', downloadAll);
+  // Eventos
+  document.getElementById('photosZone').addEventListener('click', () => document.getElementById('photosInput').click());
+  document.getElementById('photosInput').addEventListener('change', e => addPhotos(Array.from(e.target.files)));
+  document.getElementById('photosZone').addEventListener('dragover', e => e.preventDefault());
+  document.getElementById('photosZone').addEventListener('drop', e => {
+    e.preventDefault();
+    addPhotos(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
+  });
 
-  // ── INIT ─────────────────────────────────────────────────
-  document.getElementById('emptyState').style.display = 'flex';
-  Object.assign(document.getElementById('emptyState').style, { position:'absolute', inset:'0', flexDirection:'column', alignItems:'center', justifyContent:'center' });
-  canvas.width = 10; canvas.height = 10;
+  document.getElementById('logoZone').addEventListener('click', () => document.getElementById('logoInput').click());
+  document.getElementById('logoInput').addEventListener('change', e => e.target.files[0] && setLogo(e.target.files[0]));
+  document.getElementById('logoZone').addEventListener('dragover', e => e.preventDefault());
+  document.getElementById('logoZone').addEventListener('drop', async e => {
+    e.preventDefault();
+    const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+    if (file) setLogo(file);
+  });
+  document.getElementById('removeLogoBtn').addEventListener('click', removeLogo);
+
+  document.getElementById('sizeSlider').addEventListener('input', e => updateGlobal({ globalLogoSize: parseInt(e.target.value) }));
+  document.getElementById('opacitySlider').addEventListener('input', e => updateGlobal({ globalOpacity: parseInt(e.target.value) / 100 }));
+  document.getElementById('rotationSlider').addEventListener('input', e => updateGlobal({ globalRotation: parseInt(e.target.value) }));
+  document.getElementById('flipHBtn').addEventListener('click', () => updateGlobal({ globalFlipX: !globalFlipX }));
+  document.getElementById('flipVBtn').addEventListener('click', () => updateGlobal({ globalFlipY: !globalFlipY }));
+  document.getElementById('shadowSlider').addEventListener('input', e => updateGlobal({ globalShadowBlur: parseFloat(e.target.value) }));
+  document.getElementById('blendModeSelect').addEventListener('change', e => updateGlobal({ globalBlendMode: e.target.value }));
+  document.getElementById('resetTransformBtn').addEventListener('click', () => updateGlobal({ globalRotation: 0, globalFlipX: false, globalFlipY: false, globalShadowBlur: 0, globalBlendMode: 'normal' }));
+  document.getElementById('centerLogoBtn').addEventListener('click', () => updateGlobal({ globalPosX: 0.5, globalPosY: 0.5 }));
+  document.getElementById('resetPosBtn').addEventListener('click', () => updateGlobal({ globalPosX: 0.97, globalPosY: 0.97 }));
+
+  document.getElementById('prevBtn').addEventListener('click', () => { if(photos.length) { currentIdx = (currentIdx-1+photos.length)%photos.length; updateThumbsAndCounter(); drawCurrent(); } });
+  document.getElementById('nextBtn').addEventListener('click', () => { if(photos.length) { currentIdx = (currentIdx+1)%photos.length; updateThumbsAndCounter(); drawCurrent(); } });
+  document.getElementById('clearBtn').addEventListener('click', () => { if(confirm('Remover todas as fotos?')) { photos.forEach(p=>URL.revokeObjectURL(p.url)); photos=[]; currentIdx=0; updateThumbsAndCounter(); drawCurrent(); } });
+  document.getElementById('downloadCurrentBtn').addEventListener('click', async () => { if(photos.length) { await exportPhoto(photos[currentIdx], currentIdx); showToast('Baixada'); } });
+  document.getElementById('downloadAllBtn').addEventListener('click', downloadAll);
+
+  // Arrasto responsivo (mouse e touch)
+  function getCanvasCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const clientX = e.clientX ?? (e.touches ? e.touches[0].clientX : null);
+    const clientY = e.clientY ?? (e.touches ? e.touches[0].clientY : null);
+    if (!clientX) return null;
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+  }
+
+  function onDragStart(e) {
+    if (!photos.length || !logoImg) return;
+    const coords = getCanvasCoords(e);
+    if (!coords) return;
+    const nx = coords.x / canvas.width;
+    const ny = coords.y / canvas.height;
+    const { lw, lh } = getLogoDimensions(canvas.width);
+    const lx = globalPosX * canvas.width;
+    const ly = globalPosY * canvas.height;
+    if (Math.abs(coords.x - lx) <= lw/2 && Math.abs(coords.y - ly) <= lh/2) {
+      dragging = true;
+      dragBaseX = globalPosX;
+      dragBaseY = globalPosY;
+      dragStartX = nx;
+      dragStartY = ny;
+      canvas.style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+  }
+  function onDragMove(e) {
+    if (!dragging || !photos.length) return;
+    const coords = getCanvasCoords(e);
+    if (!coords) return;
+    const deltaX = coords.x / canvas.width - dragStartX;
+    const deltaY = coords.y / canvas.height - dragStartY;
+    updateGlobal({ globalPosX: dragBaseX + deltaX, globalPosY: dragBaseY + deltaY });
+    e.preventDefault();
+  }
+  function onDragEnd() { dragging = false; canvas.style.cursor = 'grab'; }
+  canvas.addEventListener('mousedown', onDragStart);
+  window.addEventListener('mousemove', onDragMove);
+  window.addEventListener('mouseup', onDragEnd);
+  canvas.addEventListener('touchstart', onDragStart, { passive: false });
+  window.addEventListener('touchmove', onDragMove, { passive: false });
+  window.addEventListener('touchend', onDragEnd);
+
+  window.addEventListener('keydown', (e) => {
+    if (!photos.length || !logoImg) return;
+    const step = e.shiftKey ? 0.02 : 0.006;
+    let dx = 0, dy = 0;
+    if (e.key === 'ArrowLeft') dx = -step;
+    else if (e.key === 'ArrowRight') dx = step;
+    else if (e.key === 'ArrowUp') dy = -step;
+    else if (e.key === 'ArrowDown') dy = step;
+    else return;
+    e.preventDefault();
+    updateGlobal({ globalPosX: globalPosX + dx, globalPosY: globalPosY + dy });
+  });
+
+  // Responsividade: redesenha se necessário ao redimensionar (já está ok, mas força redraw)
+  window.addEventListener('resize', () => { drawCurrent(); });
+
+  syncUI();
+  updateThumbsAndCounter();
+  drawCurrent();
 </script>
 </body>
 </html>
