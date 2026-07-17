@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <link rel="icon" type="image/png" href="./Mídia.png">
-  <title>Mídia Referência</title>
+  <title>Mídia Referência </title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
@@ -177,7 +177,10 @@
     }
 
     /* Grid Formatos */
+    /* Adicionada grid-4 para acomodar a nova opção ORIGINAL */
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    
     .format-btn {
       background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
       padding: 12px 4px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600; 
@@ -264,11 +267,12 @@
       position: relative; box-shadow: var(--shadow); border-radius: 4px;
       outline: 1px solid rgba(255,255,255,0.05); transition: transform 0.2s;
     }
+    
+    /* Cursor alterado para default de forma nativa para permitir controle via JS (Pan Tool) */
     #mainCanvas {
       display: block; max-width: calc(100vw - 400px); max-height: calc(100vh - 120px);
-      width: auto; height: auto; border-radius: 4px; cursor: grab;
+      width: auto; height: auto; border-radius: 4px; cursor: default;
     }
-    #mainCanvas:active { cursor: grabbing; }
     
     .empty-state {
       position: absolute; text-align: center; color: var(--text-muted);
@@ -285,6 +289,23 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.5); opacity: 0; pointer-events: none;
     }
     .toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+    /* ══════════════════════════════════════
+       RESPONSIVIDADE (Mobile / Tablets)
+    ══════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .header { height: auto; padding: 12px 16px; flex-direction: column; gap: 12px; }
+      .brand { width: 100%; justify-content: center; }
+      .header-actions { width: 100%; justify-content: center; flex-wrap: wrap; gap: 8px; }
+      .layout { flex-direction: column-reverse; overflow: hidden; }
+      .workspace { flex: 0 0 45vh; border-bottom: 1px solid var(--border); min-height: 250px; }
+      .sidebar { flex: 1; width: 100%; border-right: none; }
+      #mainCanvas { max-width: 95vw; max-height: 40vh; }
+      .grid-3 { grid-template-columns: repeat(3, 1fr); }
+      .grid-4 { grid-template-columns: repeat(4, 1fr); }
+      .btn { padding: 8px 12px; font-size: 0.75rem; flex: 1; text-align: center; }
+      .counter { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -302,13 +323,12 @@
 
 <div class="app">
   <div class="header">
-     <div class="brand">
-        <div style="background: #ffffff; width:45px; height:45px; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+    <div class="brand">
+      <div style="background: #ffffff; width:45px; height:45px; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
       <img src="./Mídia.png" alt="Logo" style="width:100%; height:100%; object-fit: contain;">
     </div>
-    <div class="brand-text">Mídia<span>Referência</span></div>
-  </div>
-      
+      <div class="brand-text">Mídia<span>Referência</span></div>
+    </div>
     <div class="header-actions">
       <button class="btn btn-icon" onclick="prevPhoto()" title="Anterior">◀</button>
       <div class="counter" id="photoCounter">0 / 0</div>
@@ -330,10 +350,12 @@
       <!-- FORMATO DA FOTO ATUAL -->
       <div class="panel-section">
         <div class="panel-title">📐 Proporção (Foto Atual)</div>
-        <div class="grid-3">
+        <!-- Adicionada nova opção ORIGINAL baseada no novo design -->
+        <div class="grid-4">
+          <button class="format-btn active" id="btn-fmt-original" onclick="setFormat('original')">AUTO<br>Livre</button>
           <button class="format-btn" id="btn-fmt-feed" onclick="setFormat('feed')">FEED<br>1:1</button>
           <button class="format-btn" id="btn-fmt-story" onclick="setFormat('story')">STORY<br>9:16</button>
-          <button class="format-btn active" id="btn-fmt-horizontal" onclick="setFormat('horizontal')">TELA<br>16:9</button>
+          <button class="format-btn" id="btn-fmt-horizontal" onclick="setFormat('horizontal')">TELA<br>16:9</button>
         </div>
       </div>
 
@@ -351,6 +373,11 @@
       <div class="panel-section" id="adjustmentsPanel" style="display: none;">
         <div class="panel-title">⚙️ Ajustes Base</div>
         
+        <!-- Botão para acionar a Ferramenta Mão (Pan Tool) -->
+        <button id="panToolBtn" class="btn" style="width: 100%; margin-bottom: 16px; background: var(--surface-2);" onclick="togglePanTool()">
+          ✋ Ferramenta Mão (Navegar)
+        </button>
+
         <div class="control-row">
           <label>Zoom</label>
           <input type="range" id="zoomSlider" min="0.1" max="3" step="0.05" value="1">
@@ -384,56 +411,23 @@
           <span id="filterArrow">▼</span>
         </button>
         <div class="accordion-content" id="advancedFilters">
-          <div class="control-row">
-            <label>Temperatura</label>
-            <input type="range" id="f-temp" min="-100" max="100" value="0">
-            <input type="number" id="v-temp" class="val-input" min="-100" max="100" value="0">
+          
+          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <button class="btn btn-primary" style="flex: 1; font-size: 0.75rem; padding: 6px; box-shadow: 0 4px 10px rgba(245,197,66,0.3);" onclick="autoAdjust()">🪄 Automático</button>
+            <button class="btn" style="flex: 1; font-size: 0.75rem; padding: 6px;" onclick="resetRAW()">↩️ Padrão</button>
           </div>
-          <div class="control-row">
-            <label>Colorir</label>
-            <input type="range" id="f-tint" min="-100" max="100" value="0">
-            <input type="number" id="v-tint" class="val-input" min="-100" max="100" value="0">
-          </div>
-          <div class="control-row">
-            <label>Exposição</label>
-            <input type="range" id="f-exposure" min="-100" max="100" value="0">
-            <input type="number" id="v-exposure" class="val-input" min="-100" max="100" value="0">
-          </div>
-          <div class="control-row">
-            <label>Contraste</label>
-            <input type="range" id="f-contrast" min="-100" max="100" value="0">
-            <input type="number" id="v-contrast" class="val-input" min="-100" max="100" value="0">
-          </div>
-          <div class="control-row">
-            <label>Realces</label>
-            <input type="range" id="f-highlights" min="-100" max="100" value="0">
-            <input type="number" id="v-highlights" class="val-input" min="-100" max="100" value="0">
-          </div>
-          <div class="control-row">
-            <label>Sombras</label>
-            <input type="range" id="f-shadows" min="-100" max="100" value="0">
-            <input type="number" id="v-shadows" class="val-input" min="-100" max="100" value="0">
-          </div>
-          <div class="control-row">
-            <label>Brancos</label>
-            <input type="range" id="f-whites" min="-100" max="100" value="0">
-            <input type="number" id="v-whites" class="val-input" min="-100" max="100" value="0">
-          </div>
-          <div class="control-row">
-            <label>Pretos</label>
-            <input type="range" id="f-blacks" min="-100" max="100" value="0">
-            <input type="number" id="v-blacks" class="val-input" min="-100" max="100" value="0">
-          </div>
-          <div class="control-row">
-            <label>Vibração</label>
-            <input type="range" id="f-vibrance" min="-100" max="100" value="0">
-            <input type="number" id="v-vibrance" class="val-input" min="-100" max="100" value="0">
-          </div>
-          <div class="control-row">
-            <label>Saturação</label>
-            <input type="range" id="f-saturation" min="-100" max="100" value="0">
-            <input type="number" id="v-saturation" class="val-input" min="-100" max="100" value="0">
-          </div>
+
+          <!-- Filtros RAW -->
+          <div class="control-row"><label>Temperatura</label><input type="range" id="f-temp" min="-100" max="100" value="0"><input type="number" id="v-temp" class="val-input" min="-100" max="100" value="0"></div>
+          <div class="control-row"><label>Colorir</label><input type="range" id="f-tint" min="-100" max="100" value="0"><input type="number" id="v-tint" class="val-input" min="-100" max="100" value="0"></div>
+          <div class="control-row"><label>Exposição</label><input type="range" id="f-exposure" min="-100" max="100" value="0"><input type="number" id="v-exposure" class="val-input" min="-100" max="100" value="0"></div>
+          <div class="control-row"><label>Contraste</label><input type="range" id="f-contrast" min="-100" max="100" value="0"><input type="number" id="v-contrast" class="val-input" min="-100" max="100" value="0"></div>
+          <div class="control-row"><label>Realces</label><input type="range" id="f-highlights" min="-100" max="100" value="0"><input type="number" id="v-highlights" class="val-input" min="-100" max="100" value="0"></div>
+          <div class="control-row"><label>Sombras</label><input type="range" id="f-shadows" min="-100" max="100" value="0"><input type="number" id="v-shadows" class="val-input" min="-100" max="100" value="0"></div>
+          <div class="control-row"><label>Brancos</label><input type="range" id="f-whites" min="-100" max="100" value="0"><input type="number" id="v-whites" class="val-input" min="-100" max="100" value="0"></div>
+          <div class="control-row"><label>Pretos</label><input type="range" id="f-blacks" min="-100" max="100" value="0"><input type="number" id="v-blacks" class="val-input" min="-100" max="100" value="0"></div>
+          <div class="control-row"><label>Vibração</label><input type="range" id="f-vibrance" min="-100" max="100" value="0"><input type="number" id="v-vibrance" class="val-input" min="-100" max="100" value="0"></div>
+          <div class="control-row"><label>Saturação</label><input type="range" id="f-saturation" min="-100" max="100" value="0"><input type="number" id="v-saturation" class="val-input" min="-100" max="100" value="0"></div>
         </div>
       </div>
 
@@ -487,6 +481,15 @@
   let activeLogoIdx = -1;
   let renderRequested = false;
   let draggingLogoIdx = -1;
+  let activeGuides = {}; /* Estado das Guias Inteligentes */
+
+  // Variáveis para a nova Ferramenta Mão (Pan Tool)
+  let isPanToolActive = false;
+  let isPanning = false;
+  let panStartX = 0;
+  let panStartY = 0;
+  let photoStartOffsetX = 0;
+  let photoStartOffsetY = 0;
 
   const canvas = document.getElementById('mainCanvas');
   const ctx = canvas.getContext('2d');
@@ -524,6 +527,115 @@
     }
   }
 
+  /* ── FERRAMENTA MÃO (PAN TOOL) ────────────────────────────────── */
+  function togglePanTool() {
+    isPanToolActive = !isPanToolActive;
+    const btn = document.getElementById('panToolBtn');
+    if (isPanToolActive) {
+      btn.classList.add('btn-primary');
+      canvas.style.cursor = 'grab';
+    } else {
+      btn.classList.remove('btn-primary');
+      canvas.style.cursor = 'default';
+    }
+  }
+
+  // Função utilitária para limitar de forma coerente a área de pan 
+  // impedindo a imagem de sumir completamente do canvas (preserva sempre 15% visível).
+  function clampPan(val, axis, p) {
+    const w = canvas.width;
+    const h = canvas.height;
+    const baseScale = Math.max(w / p.img.width, h / p.img.height);
+    const finalScale = baseScale * p.zoom;
+    
+    // offsetMult é consistentemente w / 1000 tanto para X quanto para Y (conforme regra do drawCanvas)
+    const offsetMult = w / 1000; 
+    
+    const canvasSize = axis === 'x' ? w : h;
+    const imgSize = axis === 'x' ? p.img.width * finalScale : p.img.height * finalScale;
+    
+    const minVisible = canvasSize * 0.15; // 15% de margem garantida no visor
+    
+    // Calcula os limites máximos onde a imagem atinge a fronteira de 15% da tela oposta
+    const minVal = (minVisible - canvasSize/2 - imgSize/2) / offsetMult;
+    const maxVal = (canvasSize/2 - minVisible + imgSize/2) / offsetMult;
+
+    return Math.max(minVal, Math.min(maxVal, val));
+  }
+
+
+  /* ── ALGORITMO DE IA: AJUSTE AUTOMÁTICO & RESET ──────────────── */
+  function resetRAW() {
+    if (activePhotoIdx < 0) return;
+    const p = photos[activePhotoIdx];
+    rawFilters.forEach(k => {
+      p.filters[k] = 0;
+      document.getElementById('f-' + k).value = 0;
+      document.getElementById('v-' + k).value = 0;
+    });
+    showToast("↩️ Filtros redefinidos para o padrão original.");
+    requestRender();
+  }
+
+  function autoAdjust() {
+    if (activePhotoIdx < 0) return;
+    const p = photos[activePhotoIdx];
+    
+    const thumb = document.createElement('canvas');
+    thumb.width = 64; thumb.height = 64;
+    const tCtx = thumb.getContext('2d', { willReadFrequently: true });
+    tCtx.drawImage(p.img, 0, 0, 64, 64);
+    const data = tCtx.getImageData(0, 0, 64, 64).data;
+    
+    let totalL = 0, totalR = 0, totalB = 0;
+    let minL = 255, maxL = 0;
+    const pixels = data.length / 4;
+    
+    for(let i = 0; i < data.length; i += 4) {
+      let r = data[i], g = data[i+1], b = data[i+2];
+      let l = 0.299 * r + 0.587 * g + 0.114 * b; 
+      totalL += l; totalR += r; totalB += b;
+      if(l < minL) minL = l;
+      if(l > maxL) maxL = l;
+    }
+    
+    let avgL = totalL / pixels;
+    let avgR = totalR / pixels;
+    let avgB = totalB / pixels;
+
+    let auto = {};
+    let expDiff = ((128 - avgL) / 255) * 100;
+    auto.exposure = Math.max(-40, Math.min(45, expDiff * 0.8));
+    auto.contrast = 18;
+    auto.blacks = minL > 15 ? -(minL - 10) : 5; 
+    auto.whites = maxL < 240 ? (245 - maxL) : -5;
+    
+    if (avgL > 150) { 
+      auto.highlights = -30; auto.shadows = 5; 
+    } else if (avgL < 100) { 
+      auto.highlights = -5; auto.shadows = 30; 
+    } else { 
+      auto.highlights = -15; auto.shadows = 15; 
+    }
+    
+    auto.temp = Math.max(-25, Math.min(25, (avgB - avgR) * 0.35));
+    auto.vibrance = 28;
+    auto.saturation = 6;
+    auto.tint = 0;
+
+    rawFilters.forEach(k => {
+      let val = Math.round(auto[k] || 0);
+      val = Math.max(-100, Math.min(100, val));
+      p.filters[k] = val;
+      
+      document.getElementById('f-' + k).value = val;
+      document.getElementById('v-' + k).value = val;
+    });
+    
+    showToast("🪄 Análise concluída: Ajuste automático aplicado!");
+    requestRender();
+  }
+
   /* ── INICIALIZAÇÃO DE BINDINGS (Sincronizar Barras e Números) ── */
   function bindSync(sliderId, inputId, updateFunc) {
     const slider = document.getElementById(sliderId);
@@ -539,16 +651,13 @@
   }
 
   function initUIBindings() {
-    // Zoom & Pos
     bindSync('zoomSlider', 'zoomVal', v => { if(activePhotoIdx>=0) { photos[activePhotoIdx].zoom = v; requestRender(); }});
     bindSync('xSlider', 'xVal', v => { if(activePhotoIdx>=0) { photos[activePhotoIdx].offsetX = v; requestRender(); }});
     bindSync('ySlider', 'yVal', v => { if(activePhotoIdx>=0) { photos[activePhotoIdx].offsetY = v; requestRender(); }});
     
-    // Logos
     bindSync('logoSize', 'logoSizeVal', v => { if(activeLogoIdx>=0) { logos[activeLogoIdx].size = v; requestRender(); }});
     bindSync('logoOpacity', 'logoOpacityVal', v => { if(activeLogoIdx>=0) { logos[activeLogoIdx].opacity = v/100; requestRender(); }});
 
-    // RAW Filters
     rawFilters.forEach(key => {
       bindSync('f-' + key, 'v-' + key, v => {
         if(activePhotoIdx >= 0) {
@@ -570,10 +679,9 @@
       const url = URL.createObjectURL(f);
       try {
         const img = await loadImage(url);
-        // Cada foto possui seu próprio formato e filtros
         let newPhoto = {
           file: f, url, img, name: f.name,
-          format: 'horizontal', // Padrão: 1600x1200
+          format: 'original', // <-- MUDANÇA: O Padrão agora identifica e preserva as proporções originais
           zoom: 1, offsetX: 0, offsetY: 0,
           filters: { bw: false, pureWhite: false }
         };
@@ -649,7 +757,6 @@
       const p = photos[activePhotoIdx];
       updateFormatButtons();
       
-      // Atualiza os inputs via setter manual para não acionar os events e criar loop
       const setUI = (id, val) => { document.getElementById(id).value = val; };
       setUI('zoomSlider', p.zoom); setUI('zoomVal', p.zoom);
       setUI('xSlider', p.offsetX); setUI('xVal', p.offsetX);
@@ -736,18 +843,15 @@
     }
   }
 
-  // Processamento de Pixels p/ simular Camera RAW de alta performance
   function applyRAWFilters(imgData, f) {
     const data = imgData.data;
     const len = data.length;
 
-    // Pré-cálculos para evitar matemática desnecessária no loop
-    const exposureMult = Math.pow(2, f.exposure / 50); // -100 a 100 map -> EV
+    const exposureMult = Math.pow(2, f.exposure / 50); 
     const contrastFactor = (259 * (f.contrast + 255)) / (255 * (259 - f.contrast));
     const satFactor = 1 + (f.saturation / 100);
     const vibFactor = f.vibrance / 100;
     
-    // Check if any complex filter is needed to save CPU time
     const needsComplex = f.temp!==0 || f.tint!==0 || f.exposure!==0 || f.contrast!==0 || 
                          f.highlights!==0 || f.shadows!==0 || f.whites!==0 || f.blacks!==0 || 
                          f.vibrance!==0 || f.saturation!==0;
@@ -758,27 +862,22 @@
       let g = data[i+1];
       let b = data[i+2];
 
-      // Temperatura (Red/Blue shift) & Colorir (Green/Magenta shift)
       r += f.temp * 0.4;
       b -= f.temp * 0.4;
       g += f.tint * 0.4;
 
-      // Exposição
       r *= exposureMult; g *= exposureMult; b *= exposureMult;
 
-      // Contraste
       r = contrastFactor * (r - 128) + 128;
       g = contrastFactor * (g - 128) + 128;
       b = contrastFactor * (b - 128) + 128;
 
-      // Luminância
       let l = 0.299 * r + 0.587 * g + 0.114 * b;
 
-      // Sombras e Realces (Proteção de limites)
       if (f.shadows !== 0 || f.highlights !== 0) {
-        let shadowMask = 1 - (l / 255); // Afeta mais os escuros
+        let shadowMask = 1 - (l / 255); 
         let shadowMult = 1 + (f.shadows / 100) * shadowMask;
-        let highMask = l / 255; // Afeta mais os claros
+        let highMask = l / 255; 
         let highMult = 1 + (f.highlights / 100) * highMask;
 
         r = r * shadowMult * highMult;
@@ -786,7 +885,6 @@
         b = b * shadowMult * highMult;
       }
 
-      // Brancos e Pretos (Esticamento de extremos)
       if (f.whites !== 0 || f.blacks !== 0) {
         let whiteShift = f.whites * (l / 255);
         let blackShift = f.blacks * (1 - (l / 255));
@@ -795,24 +893,21 @@
         b += whiteShift - blackShift;
       }
 
-      // Vibração (aumenta saturação onde há menos) & Saturação global
       if (f.vibrance !== 0 || f.saturation !== 0) {
-        l = 0.299 * r + 0.587 * g + 0.114 * b; // re-calcula luminância
+        l = 0.299 * r + 0.587 * g + 0.114 * b; 
         let avg = (r + g + b) / 3;
         let amt = ((Math.abs(r - avg) + Math.abs(g - avg) + Math.abs(b - avg)) / 3) / 255;
         
-        let v = vibFactor * (1 - amt); // Boost de vibração
+        let v = vibFactor * (1 - amt); 
         r = l + (r - l) * (1 + v);
         g = l + (g - l) * (1 + v);
         b = l + (b - l) * (1 + v);
 
-        // Saturação final
         r = l + (r - l) * satFactor;
         g = l + (g - l) * satFactor;
         b = l + (b - l) * satFactor;
       }
 
-      // Limitar e aplicar (Clamping)
       data[i]   = r < 0 ? 0 : r > 255 ? 255 : r;
       data[i+1] = g < 0 ? 0 : g > 255 ? 255 : g;
       data[i+2] = b < 0 ? 0 : b > 255 ? 255 : b;
@@ -824,22 +919,41 @@
     if (activePhotoIdx < 0 || !photos[activePhotoIdx]) return;
     const p = photos[activePhotoIdx];
     
-    // Proporções exatas pedidas
-    let w = 1600, h = 1200; // Tela Horizontal (16:9 Adaptado para Padrão Fotografia)
+    // Proporções exatas mantidas pela arquitetura atual. 
+    // MUDANÇA: A opção 'original' calcula automaticamente e foca na preservação.
+    let w = 1600, h = 1200; 
     if (p.format === 'feed') { w = 1080; h = 1080; }
     else if (p.format === 'story') { w = 1080; h = 1920; }
+    else if (p.format === 'original') {
+      const aspect = p.img.width / p.img.height;
+      let calcW = p.img.width;
+      let calcH = p.img.height;
+      
+      // Limite seguro interno (apenas para performance do RAW Filter no navegador). 
+      // Garante que o aspect-ratio seja perfeitamente fiel ao original sem esgotar RAM do usuário.
+      const maxDim = 2500; 
+      if (calcW > maxDim || calcH > maxDim) {
+        if (aspect > 1) {
+          calcW = maxDim;
+          calcH = Math.round(maxDim / aspect);
+        } else {
+          calcH = maxDim;
+          calcW = Math.round(maxDim * aspect);
+        }
+      }
+      w = calcW;
+      h = calcH;
+    }
     
     if (canvas.width !== w || canvas.height !== h) {
       canvas.width = w; canvas.height = h;
     }
     ctx.clearRect(0, 0, w, h);
     
-    // Offscreen Canvas para manipulação de pixeis e filtros sem destruir o original
     const offCanvas = document.createElement('canvas');
     offCanvas.width = w; offCanvas.height = h;
     const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
     
-    // Calcular Zoom e Posição
     const baseScale = Math.max(w / p.img.width, h / p.img.height);
     const finalScale = baseScale * p.zoom;
     const offsetMult = w / 1000;
@@ -850,12 +964,10 @@
     offCtx.imageSmoothingQuality = 'high';
     offCtx.drawImage(p.img, dx, dy, p.img.width * finalScale, p.img.height * finalScale);
     
-    // Extrair pixels para os Filtros Avançados RAW
     const imgData = offCtx.getImageData(0, 0, w, h);
     applyRAWFilters(imgData, p.filters);
     offCtx.putImageData(imgData, 0, 0);
 
-    // Filtros Globais (PB e Branco Puro via CSS Filter para manter simplicidade gráfica nesta fase)
     let cssFilters = [];
     if (p.filters.bw) cssFilters.push('grayscale(100%)');
     if (p.filters.pureWhite) cssFilters.push('contrast(1.15) brightness(1.05) saturate(0.85)');
@@ -865,7 +977,6 @@
     ctx.drawImage(offCanvas, 0, 0);
     ctx.restore();
 
-    // Renderizar Logotipos (Sem os filtros RAW nem PB, para manter as cores originais da marca)
     logos.forEach(logo => {
       const logoW = w * (logo.size / 100);
       const logoH = (logo.img.height / logo.img.width) * logoW;
@@ -879,9 +990,25 @@
       ctx.drawImage(logo.img, lx - logoW/2, ly - logoH/2, logoW, logoH);
       ctx.restore();
     });
+
+    if (draggingLogoIdx > -1) {
+      ctx.save();
+      ctx.strokeStyle = '#4ade80'; 
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 8]); 
+
+      if (activeGuides.xCenter) { ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke(); }
+      if (activeGuides.yCenter) { ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke(); }
+      if (activeGuides.left) { ctx.beginPath(); ctx.moveTo(w*0.05, 0); ctx.lineTo(w*0.05, h); ctx.stroke(); }
+      if (activeGuides.right) { ctx.beginPath(); ctx.moveTo(w*0.95, 0); ctx.lineTo(w*0.95, h); ctx.stroke(); }
+      if (activeGuides.top) { ctx.beginPath(); ctx.moveTo(0, h*0.05); ctx.lineTo(w, h*0.05); ctx.stroke(); }
+      if (activeGuides.bottom) { ctx.beginPath(); ctx.moveTo(0, h*0.95); ctx.lineTo(w, h*0.95); ctx.stroke(); }
+      
+      ctx.restore();
+    }
   }
 
-  /* ── DRAG & DROP (LOGOTIPOS NO CANVAS) ──────────────────────── */
+  /* ── DRAG & DROP & EVENTOS DO MOUSE (PAN TOOL E LOGOS) ──────── */
   function getMousePos(evt) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -893,36 +1020,151 @@
   }
 
   canvas.addEventListener('mousedown', (e) => {
-    if (logos.length === 0) return;
     const pos = getMousePos(e);
-    
-    for (let i = logos.length - 1; i >= 0; i--) {
-      const logo = logos[i];
-      const logoW = canvas.width * (logo.size / 100);
-      const logoH = (logo.img.height / logo.img.width) * logoW;
-      const lx = logo.x * canvas.width;
-      const ly = logo.y * canvas.height;
+    let hitLogo = false;
 
-      if (pos.x >= lx - logoW/2 && pos.x <= lx + logoW/2 &&
-          pos.y >= ly - logoH/2 && pos.y <= ly + logoH/2) {
-        draggingLogoIdx = i;
-        selectLogo(i); 
-        break;
+    // 1º Prioridade: Logotipos
+    if (logos.length > 0) {
+      for (let i = logos.length - 1; i >= 0; i--) {
+        const logo = logos[i];
+        const logoW = canvas.width * (logo.size / 100);
+        const logoH = (logo.img.height / logo.img.width) * logoW;
+        const lx = logo.x * canvas.width;
+        const ly = logo.y * canvas.height;
+
+        if (pos.x >= lx - logoW/2 && pos.x <= lx + logoW/2 &&
+            pos.y >= ly - logoH/2 && pos.y <= ly + logoH/2) {
+          draggingLogoIdx = i;
+          selectLogo(i); 
+          hitLogo = true;
+          break;
+        }
       }
+    }
+
+    // 2º Prioridade: Ferramenta Mão (Navegação / Pan) se nenhum logo for clicado
+    if (!hitLogo && isPanToolActive && activePhotoIdx >= 0) {
+      isPanning = true;
+      panStartX = pos.x;
+      panStartY = pos.y;
+      
+      const p = photos[activePhotoIdx];
+      photoStartOffsetX = p.offsetX;
+      photoStartOffsetY = p.offsetY;
+      
+      canvas.style.cursor = 'grabbing';
     }
   });
 
   canvas.addEventListener('mousemove', (e) => {
+    // Processamento de Drag no Logo
     if (draggingLogoIdx > -1) {
       const pos = getMousePos(e);
-      logos[draggingLogoIdx].x = pos.x / canvas.width;
-      logos[draggingLogoIdx].y = pos.y / canvas.height;
+      let nx = pos.x / canvas.width;
+      let ny = pos.y / canvas.height;
+
+      const logo = logos[draggingLogoIdx];
+      const logoW_norm = logo.size / 100;
+      const logoH_norm = (logo.img.height / logo.img.width) * logoW_norm;
+
+      const snapThreshX = 15 / canvas.width;  
+      const snapThreshY = 15 / canvas.height; 
+
+      activeGuides = { xCenter: false, yCenter: false, left: false, right: false, top: false, bottom: false };
+      const margin = 0.05; 
+
+      if (Math.abs(nx - 0.5) < snapThreshX) { nx = 0.5; activeGuides.xCenter = true; }
+      if (Math.abs(ny - 0.5) < snapThreshY) { ny = 0.5; activeGuides.yCenter = true; }
+
+      if (Math.abs((nx - logoW_norm/2) - margin) < snapThreshX) { nx = margin + logoW_norm/2; activeGuides.left = true; }
+      if (Math.abs((nx + logoW_norm/2) - (1 - margin)) < snapThreshX) { nx = 1 - margin - logoW_norm/2; activeGuides.right = true; }
+
+      if (Math.abs((ny - logoH_norm/2) - margin) < snapThreshY) { ny = margin + logoH_norm/2; activeGuides.top = true; }
+      if (Math.abs((ny + logoH_norm/2) - (1 - margin)) < snapThreshY) { ny = 1 - margin - logoH_norm/2; activeGuides.bottom = true; }
+
+      logos[draggingLogoIdx].x = nx;
+      logos[draggingLogoIdx].y = ny;
+      requestRender();
+      return; 
+    }
+
+    // Processamento do Movimento (Ferramenta Mão)
+    if (isPanning && activePhotoIdx >= 0) {
+      const pos = getMousePos(e);
+      const dx = pos.x - panStartX;
+      const dy = pos.y - panStartY;
+      
+      const p = photos[activePhotoIdx];
+      const offsetMult = canvas.width / 1000;
+      
+      let newOffsetX = photoStartOffsetX + (dx / offsetMult);
+      let newOffsetY = photoStartOffsetY + (dy / offsetMult);
+
+      // Aplica os limites calculados (Clamp) para nunca deixar a foto sumir
+      newOffsetX = clampPan(newOffsetX, 'x', p);
+      newOffsetY = clampPan(newOffsetY, 'y', p);
+
+      p.offsetX = newOffsetX;
+      p.offsetY = newOffsetY;
+
+      // Sincroniza dinamicamente as barras e inputs de offset no painel
+      document.getElementById('xSlider').value = p.offsetX;
+      document.getElementById('xVal').value = Math.round(p.offsetX);
+      document.getElementById('ySlider').value = p.offsetY;
+      document.getElementById('yVal').value = Math.round(p.offsetY);
+
       requestRender();
     }
   });
 
-  window.addEventListener('mouseup', () => { draggingLogoIdx = -1; });
-  canvas.addEventListener('mouseleave', () => { draggingLogoIdx = -1; });
+  window.addEventListener('mouseup', () => { 
+    draggingLogoIdx = -1; 
+    activeGuides = {}; 
+    if (isPanning) {
+      isPanning = false;
+      if (isPanToolActive) canvas.style.cursor = 'grab';
+    }
+    requestRender(); 
+  });
+  
+  canvas.addEventListener('mouseleave', () => { 
+    draggingLogoIdx = -1; 
+    activeGuides = {}; 
+    if (isPanning) {
+      isPanning = false;
+      if (isPanToolActive) canvas.style.cursor = 'grab';
+    }
+    requestRender(); 
+  });
+
+  // Suporte Touch para Dispositivos Móveis adaptado para a Ferramenta Mão e Logos
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 0) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent("mousedown", { clientX: touch.clientX, clientY: touch.clientY });
+      canvas.dispatchEvent(mouseEvent);
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length > 0) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent("mousemove", { clientX: touch.clientX, clientY: touch.clientY });
+      canvas.dispatchEvent(mouseEvent);
+    }
+  }, { passive: false });
+
+  window.addEventListener('touchend', () => { 
+    draggingLogoIdx = -1; 
+    activeGuides = {}; 
+    if (isPanning) {
+      isPanning = false;
+      if (isPanToolActive) canvas.style.cursor = 'grab';
+    }
+    requestRender(); 
+  });
 
   /* ── EXPORTAÇÃO (ALTA QUALIDADE PNG) ────────────────────────── */
   function triggerDownload(filename) {
@@ -952,7 +1194,6 @@
       activePhotoIdx = i;
       syncPhotoState();
       
-      // Permitir render loop processar a imagem pesada antes do snapshot
       await new Promise(r => setTimeout(r, 100)); 
       drawCanvas(); 
       
